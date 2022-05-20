@@ -869,6 +869,8 @@ struct log_t{
 	4.0.14, we separate the write of the log file and the actual fsync()
 	or other method to flush it to disk. The names below shhould really
 	be 'flush_or_write'! */
+	ulint		trx_log_write_and_flush_timer;/*!< Total transation redo log write and flush time 
+					after last 'log_print' was called. */
 	os_event_t	no_flush_event;	/*!< this event is in the reset state
 					when a flush or a write is running;
 					a thread should wait for this without

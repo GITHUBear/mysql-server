@@ -1106,6 +1106,12 @@ trx_finalize_for_fts(
 	trx->fts_trx = NULL;
 }
 
+ulint get_now_micros() {
+	struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec) * 1000000 + tv.tv_usec;
+}
+
 /**********************************************************************//**
 If required, flushes the log to disk based on the value of
 innodb_flush_log_at_trx_commit. */
@@ -1122,9 +1128,15 @@ trx_flush_log_if_needed_low(
 		break;
 	case 1:
 		/* Write the log and optionally flush it to disk */
-		log_write_up_to(lsn, LOG_WAIT_ONE_GROUP,
-				srv_unix_file_flush_method != SRV_UNIX_NOSYNC);
-		break;
+		// TODO: calc time
+		{
+			ulint log_write_start_time = get_now_micros();
+			log_write_up_to(lsn, LOG_WAIT_ONE_GROUP,
+					srv_unix_file_flush_method != SRV_UNIX_NOSYNC);
+			ulint log_write_duration = get_now_micros() - log_write_start_time;
+			log_sys->trx_log_write_and_flush_timer += log_write_duration;
+			break;
+		}
 	case 2:
 		/* Write the log but do not flush it to disk */
 		log_write_up_to(lsn, LOG_WAIT_ONE_GROUP, FALSE);

@@ -909,6 +909,7 @@ log_init(void)
 	log_sys->next_checkpoint_no = 0;
 	log_sys->last_checkpoint_lsn = log_sys->lsn;
 	log_sys->n_pending_checkpoint_writes = 0;
+	log_sys->trx_log_write_and_flush_timer = 0;
 
 
 	rw_lock_create(checkpoint_lock_key, &log_sys->checkpoint_lock,
@@ -3621,15 +3622,18 @@ log_print(
 
 	fprintf(file,
 		"%lu pending log writes, %lu pending chkp writes\n"
-		"%lu log i/o's done, %.2f log i/o's/second\n",
+		"%lu log i/o's done, %.2f log i/o's/second\n"
+		"%lu us log write & flush\n",
 		(ulong) log_sys->n_pending_writes,
 		(ulong) log_sys->n_pending_checkpoint_writes,
 		(ulong) log_sys->n_log_ios,
 		((double)(log_sys->n_log_ios - log_sys->n_log_ios_old)
-		 / time_elapsed));
+		 / time_elapsed),
+		log_sys->trx_log_write_and_flush_timer);
 
 	log_sys->n_log_ios_old = log_sys->n_log_ios;
 	log_sys->last_printout_time = current_time;
+	log_sys->trx_log_write_and_flush_timer = 0;
 
 	mutex_exit(&(log_sys->mutex));
 }
