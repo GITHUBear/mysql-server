@@ -1138,10 +1138,14 @@ trx_flush_log_if_needed_low(
 			break;
 		}
 	case 2:
-		/* Write the log but do not flush it to disk */
-		log_write_up_to(lsn, LOG_WAIT_ONE_GROUP, FALSE);
-
-		break;
+		{
+			/* Write the log but do not flush it to disk */
+			ulint log_write_start_time = get_now_micros();
+			log_write_up_to(lsn, LOG_WAIT_ONE_GROUP, FALSE);
+			ulint log_write_duration = get_now_micros() - log_write_start_time;
+			log_sys->trx_log_write_and_flush_timer += log_write_duration;
+			break;
+		}
 	default:
 		ut_error;
 	}
